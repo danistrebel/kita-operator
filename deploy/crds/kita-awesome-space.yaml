@@ -1,0 +1,11 @@
+apiVersion: kita.danistrebel.io/v1alpha1
+kind: KitaSpace
+metadata:
+  name: awesome-space
+spec:
+  owner:
+    name: dani
+    email: daniel.strebel@gmail.com
+  repos:
+    - https://github.com/ramitsurana/awesome-kubernetes.git
+    - https://github.com/operator-framework/awesome-operators
