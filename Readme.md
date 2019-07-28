@@ -24,7 +24,7 @@ spec:
 
 ![Result Screenshot](/documentation/editor-screenshot.png?raw=true "Editor Screenshot")
 
-## Optional Sendgrid Integration for Space Login Token
+## (Optional) Sendgrid Integration for Space Login Token
 
 To send an email to the Kita Space Owner containing the login token create a Sendgrid API Key and Set the following Env Parameters
 

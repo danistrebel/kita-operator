@@ -61,13 +61,21 @@ func generateRandomToken(n int) string {
 }
 
 func sendTokenAsEmail(token string, ksr *kitav1alpha1.KitaSpace) {
+
+	sendGridAPIKey, exists := os.LookupEnv("SENDGRID_API_KEY")
+
+	if !exists {
+		log.Info("No Sendgrid configured. Cannot send token for space: " + ksr.Name)
+		return
+	}
+
 	from := mail.NewEmail("Kita Operator", os.Getenv("SENDGRID_EMAIL_SENDER"))
 	subject := "Your Kita Password"
 	to := mail.NewEmail(ksr.Spec.Owner.Name, ksr.Spec.Owner.Email)
 	plainTextContent := "Your Kita Token is: " + token
 	htmlContent := "Your Kita Token is: <strong>" + token + "</strong>"
 	message := mail.NewSingleEmail(from, subject, to, plainTextContent, htmlContent)
-	client := sendgrid.NewSendClient(os.Getenv("SENDGRID_API_KEY"))
+	client := sendgrid.NewSendClient(sendGridAPIKey)
 	result, err := client.Send(message)
 
 	if err != nil {
