@@ -1,7 +1,7 @@
 package apis
 
 import (
-	"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1"
+	"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
 )
 
 func init() {

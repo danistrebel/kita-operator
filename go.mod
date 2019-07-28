@@ -1,4 +1,4 @@
-module github.com/danistrebel/kita-space-operator
+module github.com/danistrebel/kita-operator
 
 require (
 	github.com/NYTimes/gziphandler v1.0.1 // indirect

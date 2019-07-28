@@ -1,7 +1,7 @@
 package controller
 
 import (
-	"github.com/danistrebel/kita-space-operator/pkg/controller/kitaspace"
+	"github.com/danistrebel/kita-operator/pkg/controller/kitaspace"
 )
 
 func init() {

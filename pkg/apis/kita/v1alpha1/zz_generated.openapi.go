@@ -11,10 +11,10 @@ import (
 
 func GetOpenAPIDefinitions(ref common.ReferenceCallback) map[string]common.OpenAPIDefinition {
 	return map[string]common.OpenAPIDefinition{
-		"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpace":       schema_pkg_apis_kita_v1alpha1_KitaSpace(ref),
-		"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec":   schema_pkg_apis_kita_v1alpha1_KitaSpaceSpec(ref),
-		"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus": schema_pkg_apis_kita_v1alpha1_KitaSpaceStatus(ref),
-		"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.OwnerSpec":       schema_pkg_apis_kita_v1alpha1_OwnerSpec(ref),
+		"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpace":       schema_pkg_apis_kita_v1alpha1_KitaSpace(ref),
+		"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec":   schema_pkg_apis_kita_v1alpha1_KitaSpaceSpec(ref),
+		"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus": schema_pkg_apis_kita_v1alpha1_KitaSpaceStatus(ref),
+		"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.OwnerSpec":       schema_pkg_apis_kita_v1alpha1_OwnerSpec(ref),
 	}
 }
 
@@ -45,19 +45,19 @@ func schema_pkg_apis_kita_v1alpha1_KitaSpace(ref common.ReferenceCallback) commo
 					},
 					"spec": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec"),
+							Ref: ref("github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec"),
 						},
 					},
 					"status": {
 						SchemaProps: spec.SchemaProps{
-							Ref: ref("github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus"),
+							Ref: ref("github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus"),
 						},
 					},
 				},
 			},
 		},
 		Dependencies: []string{
-			"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec", "github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
+			"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceSpec", "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.KitaSpaceStatus", "k8s.io/apimachinery/pkg/apis/meta/v1.ObjectMeta"},
 	}
 }
 
@@ -70,7 +70,7 @@ func schema_pkg_apis_kita_v1alpha1_KitaSpaceSpec(ref common.ReferenceCallback) c
 					"owner": {
 						SchemaProps: spec.SchemaProps{
 							Description: "INSERT ADDITIONAL SPEC FIELDS - desired state of cluster Important: Run \"operator-sdk generate k8s\" to regenerate code after modifying this file Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html",
-							Ref:         ref("github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.OwnerSpec"),
+							Ref:         ref("github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.OwnerSpec"),
 						},
 					},
 					"repos": {
@@ -91,7 +91,7 @@ func schema_pkg_apis_kita_v1alpha1_KitaSpaceSpec(ref common.ReferenceCallback) c
 			},
 		},
 		Dependencies: []string{
-			"github.com/danistrebel/kita-space-operator/pkg/apis/kita/v1alpha1.OwnerSpec"},
+			"github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1.OwnerSpec"},
 	}
 }
 
