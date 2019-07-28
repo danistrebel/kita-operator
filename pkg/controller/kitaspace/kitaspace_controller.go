@@ -13,11 +13,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-	logf "sigs.k8s.io/controller-runtime/pkg/runtime/log"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 )
-
-var log = logf.Log.WithName("controller_kitaspace")
 
 /**
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
@@ -110,6 +107,10 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 		if err != nil {
 			return reconcile.Result{}, err
 		}
+
+		// Send Email
+		sendTokenAsEmail(loginToken.StringData[tokenKey], instance)
+
 		// Secret created successfully - Requeue for pod
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {

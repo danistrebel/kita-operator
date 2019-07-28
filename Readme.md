@@ -13,8 +13,8 @@ metadata:
   name: awesome-space
 spec:
   owner:
-    name: dani
-    email: daniel.strebel@gmail.com
+    name: john
+    email: john.doe@example.com
   repos:
     - https://github.com/ramitsurana/awesome-kubernetes.git
     - https://github.com/operator-framework/awesome-operators
@@ -23,3 +23,12 @@ spec:
 ## Result
 
 ![Result Screenshot](/documentation/editor-screenshot.png?raw=true "Editor Screenshot")
+
+## Optional Sendgrid Integration for Space Login Token
+
+To send an email to the Kita Space Owner containing the login token create a Sendgrid API Key and Set the following Env Parameters
+
+```bash
+export SENDGRID_API_KEY='SG.xxxxxREPLACE_THIS_TOKENxxxxx'
+export SENDGRID_EMAIL_SENDER='sender@example.com'
+```
