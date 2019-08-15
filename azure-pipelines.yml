@@ -1,0 +1,115 @@
+
+# Docs: https://aka.ms/yaml
+# Tools: https://marketplace.visualstudio.com/items?itemName=ms-azure-devops.azure-pipelines
+name: $(Build.DefinitionName)_$(GitVersion_InformationalVersion)
+
+jobs:
+  - job: version
+
+    pool:
+      name: Default
+      demands: DotNetFramework
+
+    steps:
+    - task: gittools.gitversion.gitversion-task.GitVersion@4
+      displayName: GitVersion
+
+    - powershell: |
+        echo '##vso[task.setvariable variable=Version;isOutput=true]$(GitVersion.MajorMinorPatch)'
+        echo ("##vso[task.setvariable variable=SafeBranch;isOutput=true]{0}" -f ('$(GitVersion.BranchName)' -replace '[\\/]','-'))
+      name: Output
+
+  - job: build
+    dependsOn: version
+
+    # for code-signing, use the "Default" pool instead of, say vmImage: 'VS2017-Win2016'
+    pool:
+      name: Default
+
+    variables:
+      BuildCount: $[counter(dependencies.version.outputs['Output.Version'], 0)]
+      SafeBranchName: $[dependencies.version.outputs['Output.SafeBranch']]
+
+    steps:
+    - task: gittools.gitversion.gitversion-task.GitVersion@4
+      displayName: GitVersion
+      inputs:
+        additionalArguments: /nocache
+
+    - checkout: self
+      clean: true
+      lfs: true
+
+    - powershell: |
+        $(Build.SourcesDirectory)/build/build.ps1 -ModuleVersion $(GitVersion.NuGetVersion) -SourcesDirectory $(Build.SourcesDirectory) -ArtifactStagingDirectory $(Build.ArtifactStagingDirectory)
+      displayName: 'Build Module'
+
+    - powershell: $(Build.SourcesDirectory)/build/sign.ps1 -Path $(Build.ArtifactStagingDirectory) -Filter *.ps*1
+      displayName: 'Sign Module'
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifact: Deployment'
+      inputs:
+        ArtifactName: BuildArtifact
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+
+  - job: analyze
+    dependsOn: build
+
+    steps:
+    - checkout: none # skip checking out the code
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildArtifact
+        downloadPath: $(Build.ArtifactStagingDirectory)
+
+    - task: ToreGroneng.ToreGroneng-PSScriptAnalyzer-Task.PSScriptAnalyzer-Task.PowerShell Script Analyzer@1
+      displayName: 'Execute PsScriptAnalyzer'
+      inputs:
+        PsFolder: '$(Build.ArtifactStagingDirectory)'
+        ExcludeRules: '"PSShouldProcess","PSUseShouldProcessForStateChangingFunctions"'
+        # CustomRulePath: '$Home\Documents\\Modules\QMBuild\src\CommonTests'
+
+  - job: test
+    dependsOn: build
+
+    steps:
+    - checkout: self # re-checkout, because we didn't package tests
+      clean: false
+      lfs: false
+    - task: DownloadBuildArtifacts@0
+      displayName: 'Download Build Artifacts'
+      inputs:
+        artifactName: BuildArtifact
+        downloadPath: $(Build.ArtifactStagingDirectory)
+
+    - task: richardfennellBM.BM-VSTS-PesterRunner-Task.Pester-Task.Pester@8
+      displayName: 'Pester Test Runner'
+      inputs:
+        scriptFolder: '$(Build.SourcesDirectory)\Tests'
+        resultsFile: '$(Common.TestResultsDirectory)\Test-$(Build.BuildNumber).xml '
+        CodeCoverageOutputFile: '$(Common.TestResultsDirectory)\Coverage-$(Build.BuildNumber).xml'
+        excludeTag: 'Integration, Audit'
+        additionalModulePath: '$(Build.ArtifactStagingDirectory)'
+        CodeCoverageFolder: '$(Build.ArtifactStagingDirectory)'
+
+    - task: PublishTestResults@2
+      displayName: 'Publish Test Results'
+      inputs:
+        testResultsFormat: NUnit
+        testResultsFiles: '**\TEST-*.xml'
+        searchFolder: '$(Common.TestResultsDirectory)'
+      condition: succeededOrFailed()
+
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage'
+      inputs:
+        summaryFileLocation: '$(Common.TestResultsDirectory)\Coverage-$(Build.BuildNumber).xml '
+      condition: succeededOrFailed()
+
+#  - job: publish
+#    dependsOn: [test, analyze]
+#    steps:
+#      Actually publish this somewhere
+
