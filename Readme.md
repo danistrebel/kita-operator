@@ -1,4 +1,6 @@
-# KITA is a Kubernetes operator for building Instructor-led Tutorials and Awesome demos
+# KITA 
+
+KITA is a Kubernetes operator for building Instructor-led Tutorials and Awesome demos
 
 ## General Idea
 

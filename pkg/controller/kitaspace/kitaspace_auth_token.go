@@ -29,7 +29,7 @@ func newLoginTokenForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*c
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      tokenSecretName(ksr),
-			Namespace: ksr.Namespace,
+			Namespace: ksr.Name,
 			Labels:    labels,
 		},
 		StringData: map[string]string{

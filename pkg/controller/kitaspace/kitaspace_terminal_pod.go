@@ -11,7 +11,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
-// newKitaTerminalPodForCR returns a kita terminal pod with the same name/namespace as the cr
+// newKitaTerminalPodForCR returns a kita terminal pod in the appropriate namespace
 func newKitaTerminalPodForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*corev1.Pod, error) {
 	labels := map[string]string{
 		"app":   cr.Name,
@@ -23,7 +23,7 @@ func newKitaTerminalPodForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme)
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      cr.Spec.Owner.Name + "-terminal",
-			Namespace: cr.Namespace,
+			Namespace: cr.Name,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{

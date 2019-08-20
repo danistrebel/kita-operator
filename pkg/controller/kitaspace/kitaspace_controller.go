@@ -35,7 +35,9 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("kitaspace-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("kitaspace-controller", mgr, controller.Options{
+		Reconciler: r,
+	})
 	if err != nil {
 		return err
 	}
@@ -79,7 +81,9 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling KitaSpace")
 
-	// Fetch the KitaSpace instance
+	///////////////////////
+	// KITA SPACE CR
+	///////////////////////
 	instance := &kitav1alpha1.KitaSpace{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
@@ -93,14 +97,35 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
-	// Create a new login secret for the kita space
+	///////////////////////
+	// KITA SPACE NAMESPACE
+	///////////////////////
+	//
+	// Create a new dedicated namespace the kita space
+	// Hackish because r.client.Get apparently does not support namespaces
+	namespace, err := newNamespaceForCR(instance, r.scheme)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	err = r.client.Create(context.TODO(), namespace)
+	if err != nil && !errors.IsAlreadyExists(err) {
+		reqLogger.Info(err.Error())
+		return reconcile.Result{}, err
+	} else if err == nil {
+		return reconcile.Result{Requeue: true}, nil
+	} else {
+		reqLogger.Info("Namespace Exists")
+	}
+
+	///////////////////////
+	// KITA SPACE TOKEN
+	///////////////////////
 	loginToken, err := newLoginTokenForCR(instance, r.scheme)
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
 	foundLoginTokenSecret := &corev1.Secret{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: loginToken.Name, Namespace: loginToken.Namespace}, foundLoginTokenSecret)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: loginToken.Name, Namespace: instance.Name}, foundLoginTokenSecret)
 	if err != nil && errors.IsNotFound(err) {
 		reqLogger.Info("Creating a new login Secret", "Secret.Namespace", loginToken.Namespace, "Secret.Name", loginToken.Name)
 		err = r.client.Create(context.TODO(), loginToken)
@@ -117,19 +142,20 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{}, err
 	}
 
+	///////////////////////
+	// KITA SPACE NAMESPACE
+	///////////////////////
 	// Define a new Pod object
 	pod, err := newKitaTerminalPodForCR(instance, r.scheme)
-
 	// Set KitaSpace instance as the owner and controller
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-
 	// Check if this Pod already exists
 	foundPod := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, foundPod)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: instance.Name}, foundPod)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
+		reqLogger.Info("Creating a new Pod", "Pod.Namespace", instance.Name, "Pod.Name", pod.Name)
 		err = r.client.Create(context.TODO(), pod)
 		if err != nil {
 			return reconcile.Result{}, err
