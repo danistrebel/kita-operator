@@ -5,6 +5,7 @@ import (
 
 	kitav1alpha1 "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -136,14 +137,58 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 		// Send Email
 		sendTokenAsEmail(loginToken.StringData[tokenKey], instance)
 
-		// Secret created successfully - Requeue for pod
+		// Secret created successfully - Requeue
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	///////////////////////
-	// KITA SPACE NAMESPACE
+	// KITA SERVICE ACCOUNT
+	///////////////////////
+	sa, err := newServiceAccountForCR(instance, r.scheme)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	foundServiceAccount := &corev1.ServiceAccount{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: sa.Name, Namespace: instance.Name}, foundServiceAccount)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service Account", "sa.Namespace", sa.Namespace, "sa.Name", sa.Name)
+		err = r.client.Create(context.TODO(), sa)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Secret created successfully - Requeue
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	///////////////////////
+	// KITA ROLE BINDING
+	///////////////////////
+	rb, err := newRoleBindingForCR(instance, r.scheme)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	foundRoleBinding := &rbacv1.RoleBinding{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: rb.Name, Namespace: instance.Name}, foundRoleBinding)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Role Binding", "sa.Namespace", rb.Namespace, "sa.Name", rb.Name)
+		err = r.client.Create(context.TODO(), rb)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// Secret created successfully - Requeue
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	///////////////////////
+	// KITA SPACE TERMINAL POD
 	///////////////////////
 	// Define a new Pod object
 	pod, err := newKitaTerminalPodForCR(instance, r.scheme)

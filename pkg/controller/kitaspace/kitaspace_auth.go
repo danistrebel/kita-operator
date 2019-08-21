@@ -8,6 +8,7 @@ import (
 	"github.com/sendgrid/sendgrid-go"
 	"github.com/sendgrid/sendgrid-go/helpers/mail"
 	corev1 "k8s.io/api/core/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -43,6 +44,59 @@ func newLoginTokenForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*c
 	}
 
 	return secret, nil
+}
+
+func newServiceAccountForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*corev1.ServiceAccount, error) {
+	labels := map[string]string{
+		"app": ksr.Name,
+	}
+
+	sa := &corev1.ServiceAccount{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "space-admin",
+			Namespace: ksr.Name,
+			Labels:    labels,
+		},
+	}
+
+	// Set KitaSpace instance as the owner and controller
+	if err := controllerutil.SetControllerReference(ksr, sa, scheme); err != nil {
+		return sa, err
+	}
+
+	return sa, nil
+}
+
+func newRoleBindingForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*rbacv1.RoleBinding, error) {
+
+	rb := &rbacv1.RoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "RoleBinding",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "space-admin-binding",
+			Namespace: ksr.Name,
+		},
+		Subjects: []rbacv1.Subject{
+			{
+				Kind:      "ServiceAccount",
+				Name:      "space-admin",
+				Namespace: ksr.Name,
+			},
+		},
+		RoleRef: rbacv1.RoleRef{
+			APIGroup: "rbac.authorization.k8s.io",
+			Kind:     "ClusterRole",
+			Name:     "admin",
+		},
+	}
+
+	// Set KitaSpace instance as the owner and controller
+	if err := controllerutil.SetControllerReference(ksr, rb, scheme); err != nil {
+		return rb, err
+	}
+
+	return rb, nil
 }
 
 func tokenSecretName(ksr *kitav1alpha1.KitaSpace) string {

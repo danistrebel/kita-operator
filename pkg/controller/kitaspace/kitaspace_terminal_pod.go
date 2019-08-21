@@ -22,12 +22,13 @@ func newKitaTerminalPodForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme)
 
 	pod := &corev1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Spec.Owner.Name + "-terminal",
+			Name:      "cli-terminal",
 			Namespace: cr.Name,
 			Labels:    labels,
 		},
 		Spec: corev1.PodSpec{
-			InitContainers: initContainers,
+			ServiceAccountName: "space-admin",
+			InitContainers:     initContainers,
 			Containers: []corev1.Container{
 				{
 					Name:  "vscode",
@@ -100,5 +101,6 @@ func getRepoInitContainers(repos []string) []corev1.Container {
 
 		repoInitContainers = append(repoInitContainers, initContainer)
 	}
+
 	return repoInitContainers
 }

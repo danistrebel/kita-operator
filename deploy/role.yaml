@@ -9,6 +9,7 @@ rules:
   resources:
   - pods
   - services
+  - serviceaccounts
   - endpoints
   - persistentvolumeclaims
   - events
@@ -53,6 +54,12 @@ rules:
   - replicasets
   verbs:
   - get
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - rolebindings
+  verbs:
+  - '*'
 - apiGroups:
   - kita.danistrebel.io
   resources:
