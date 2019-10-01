@@ -3,6 +3,7 @@ kind: KitaSpace
 metadata:
   name: awesome-space
 spec:
+  platform: openshift
   owner:
     name: dani
     email: daniel.strebel@gmail.com

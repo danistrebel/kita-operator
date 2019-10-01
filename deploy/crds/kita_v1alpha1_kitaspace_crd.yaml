@@ -43,6 +43,8 @@ spec:
               - name
               - email
               type: object
+            platform:
+              type: string
             repos:
               items:
                 type: string

@@ -64,6 +64,7 @@ rules:
   - kita.danistrebel.io
   resources:
   - '*'
+  - kitaspaces
   verbs:
   - '*'
 - apiGroups:

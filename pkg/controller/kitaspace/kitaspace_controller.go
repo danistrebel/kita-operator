@@ -4,6 +4,7 @@ import (
 	"context"
 
 	kitav1alpha1 "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -181,37 +182,57 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 			return reconcile.Result{}, err
 		}
 
-		// Secret created successfully - Requeue
+		// Role Binding created successfully - Requeue
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
 	///////////////////////
-	// KITA SPACE TERMINAL POD
+	// KITA SPACE TERMINAL DEPLOYMENT
 	///////////////////////
-	// Define a new Pod object
-	pod, err := newKitaTerminalPodForCR(instance, r.scheme)
+	// Define a new Deployment object
+	deployment, err := newKitaTerminalDeloymentforCR(instance, r.scheme)
 	// Set KitaSpace instance as the owner and controller
 	if err != nil {
 		return reconcile.Result{}, err
 	}
-	// Check if this Pod already exists
-	foundPod := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: instance.Name}, foundPod)
+	// Check if this Deployment already exists
+	foundDeployment := &appsv1.Deployment{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: deployment.Name, Namespace: instance.Name}, foundDeployment)
 	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", instance.Name, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
+		reqLogger.Info("Creating a new Deployment", "deployment.Namespace", instance.Name, "deployment.Name", deployment.Name)
+		err = r.client.Create(context.TODO(), deployment)
 		if err != nil {
 			return reconcile.Result{}, err
 		}
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
+		// Deployment created successfully - requeue
+		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
 	}
 
-	// Pod already exists - don't requeue
+	///////////////////////
+	// KITA SPACE TERMINAL SERVICE
+	///////////////////////
+	// Define a new Service object
+	service, err := newKitaTerminalServiceForCR(instance, r.scheme)
+	// Check if this Deployment already exists
+	foundService := &corev1.Service{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: instance.Name}, foundService)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new Service", "service.Namespace", instance.Name, "service.Name", service.Name)
+		err = r.client.Create(context.TODO(), service)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+		// Service created successfully - requeue
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	// Resources already exist - don't requeue
 	reqLogger.Info("Skip reconcile: All KitaSpace resources already exist")
 
 	return reconcile.Result{}, nil

@@ -13,8 +13,9 @@ type KitaSpaceSpec struct {
 	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
-	Owner OwnerSpec `json:"owner"`
-	Repos []string  `json:"repos,omitempty"`
+	Owner    OwnerSpec `json:"owner"`
+	Repos    []string  `json:"repos,omitempty"`
+	Platform string    `json:"platform,omitempty"`
 }
 
 // OwnerSpec defines the desired state of KitaSpace
