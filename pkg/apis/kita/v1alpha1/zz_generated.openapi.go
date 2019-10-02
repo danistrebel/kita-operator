@@ -88,8 +88,16 @@ func schema_pkg_apis_kita_v1alpha1_KitaSpaceSpec(ref common.ReferenceCallback) c
 					},
 					"platform": {
 						SchemaProps: spec.SchemaProps{
-							Type:   []string{"string"},
-							Format: "",
+							Description: "OPTIONAL: Git Repos to be initialized in the workspace",
+							Type:        []string{"string"},
+							Format:      "",
+						},
+					},
+					"token": {
+						SchemaProps: spec.SchemaProps{
+							Description: "OPTIONAL: Set to 'openshift' for Openshift configuration",
+							Type:        []string{"string"},
+							Format:      "",
 						},
 					},
 				},

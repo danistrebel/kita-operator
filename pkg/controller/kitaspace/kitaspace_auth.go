@@ -25,7 +25,10 @@ func newLoginTokenForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*c
 		"owner": ksr.Spec.Owner.Name,
 	}
 
-	generatedToken := generateRandomToken(16)
+	spaceLoginToken := generateRandomToken(16)
+	if ksr.Spec.Token != "" {
+		spaceLoginToken = ksr.Spec.Token
+	}
 
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -34,7 +37,7 @@ func newLoginTokenForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*c
 			Labels:    labels,
 		},
 		StringData: map[string]string{
-			"token": generatedToken,
+			"token": spaceLoginToken,
 		},
 	}
 

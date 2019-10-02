@@ -14,8 +14,9 @@ type KitaSpaceSpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 	Owner    OwnerSpec `json:"owner"`
-	Repos    []string  `json:"repos,omitempty"`
-	Platform string    `json:"platform,omitempty"`
+	Repos    []string  `json:"repos,omitempty"`    // OPTIONAL: Git Repos to be initialized in the workspace
+	Platform string    `json:"platform,omitempty"` // OPTIONAL: Set to "openshift" for Openshift configuration
+	Token    string    `json:"token,omitempty"`    // OPTIONAL: Explicitly set login token for Coder
 }
 
 // OwnerSpec defines the desired state of KitaSpace
