@@ -4,6 +4,7 @@ import (
 	"context"
 
 	kitav1alpha1 "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
@@ -217,7 +218,7 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 	///////////////////////
 	// Define a new Service object
 	service, err := newKitaTerminalServiceForCR(instance, r.scheme)
-	// Check if this Deployment already exists
+	// Check if this Service already exists
 	foundService := &corev1.Service{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: service.Name, Namespace: instance.Name}, foundService)
 	if err != nil && errors.IsNotFound(err) {
@@ -230,6 +231,29 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 		return reconcile.Result{Requeue: true}, nil
 	} else if err != nil {
 		return reconcile.Result{}, err
+	}
+
+	///////////////////////
+	// KITA SPACE TERMINAL OPENSHIFT ROUTE
+	///////////////////////
+
+	if instance.Spec.Platform == "openshift" {
+		// Define a new Route object
+		route, err := newKitaTerminalRouteForCR(instance, r.scheme)
+		// Check if this Deployment already exists
+		foundRoute := &routev1.Route{}
+		err = r.client.Get(context.TODO(), types.NamespacedName{Name: route.Name, Namespace: instance.Name}, foundRoute)
+		if err != nil && errors.IsNotFound(err) {
+			reqLogger.Info("Creating a new Route", "route.Namespace", instance.Name, "route.Name", route.Name)
+			err = r.client.Create(context.TODO(), route)
+			if err != nil {
+				return reconcile.Result{}, err
+			}
+			// Route created successfully - requeue
+			return reconcile.Result{Requeue: true}, nil
+		} else if err != nil {
+			return reconcile.Result{}, err
+		}
 	}
 
 	// Resources already exist - don't requeue

@@ -3,7 +3,10 @@ package kitaspace
 import (
 	"strconv"
 
+	"k8s.io/apimachinery/pkg/util/intstr"
+
 	kitav1alpha1 "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
+	routev1 "github.com/openshift/api/route/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -13,6 +16,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 )
 
+const workspaceName = "workspace"
 const terminalPortWebPortName = "web"
 const terminalPortWebPort = 9000
 
@@ -49,7 +53,7 @@ func newKitaTerminalDeloymentforCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.S
 			},
 			Template: v1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:      "cli-terminal",
+					Name:      workspaceName,
 					Namespace: cr.Name,
 					Labels:    defaultLabels(cr),
 				},
@@ -141,7 +145,7 @@ func getRepoInitContainers(repos []string) []corev1.Container {
 func newKitaTerminalServiceForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*corev1.Service, error) {
 	service := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "cli-terminal",
+			Name:      workspaceName,
 			Namespace: cr.Name,
 			Labels:    defaultLabels(cr),
 		},
@@ -162,4 +166,33 @@ func newKitaTerminalServiceForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Sch
 	}
 
 	return service, nil
+}
+
+func newKitaTerminalRouteForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*routev1.Route, error) {
+	route := &routev1.Route{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      workspaceName,
+			Namespace: cr.Name,
+			Labels:    defaultLabels(cr),
+		},
+		Spec: routev1.RouteSpec{
+			To: routev1.RouteTargetReference{
+				Kind: "Service",
+				Name: workspaceName,
+			},
+			Port: &routev1.RoutePort{
+				TargetPort: intstr.FromInt(terminalPortWebPort),
+			},
+			TLS: &routev1.TLSConfig{
+				Termination: "edge",
+			},
+		},
+	}
+
+	// Set KitaSpace instance as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, route, scheme); err != nil {
+		return route, err
+	}
+
+	return route, nil
 }
