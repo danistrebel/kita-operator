@@ -184,7 +184,8 @@ func newKitaTerminalRouteForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Schem
 				TargetPort: intstr.FromInt(terminalPortWebPort),
 			},
 			TLS: &routev1.TLSConfig{
-				Termination: "edge",
+				Termination:                   "edge",
+				InsecureEdgeTerminationPolicy: "Redirect",
 			},
 		},
 	}
