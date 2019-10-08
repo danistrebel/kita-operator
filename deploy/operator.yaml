@@ -1,24 +1,24 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: kita-space-operator
+  name: kita-operator
 spec:
   replicas: 1
   selector:
     matchLabels:
-      name: kita-space-operator
+      name: kita-operator
   template:
     metadata:
       labels:
-        name: kita-space-operator
+        name: kita-operator
     spec:
-      serviceAccountName: kita-space-operator
+      serviceAccountName: kita-operator
       containers:
-        - name: kita-space-operator
-          image: kita-space-operator:latest
+        - name: kita-operator
+          image: danistrebel/kita-operator:latest
           command:
-          - kita-space-operator
-          imagePullPolicy: Never
+            - kita-operator
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 50m
@@ -34,4 +34,4 @@ spec:
                 fieldRef:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
-              value: "kita-space-operator"
+              value: "kita-operator"

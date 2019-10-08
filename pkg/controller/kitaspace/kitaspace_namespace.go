@@ -12,6 +12,9 @@ func newNamespaceForCR(ksr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*co
 	namespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ksr.Name,
+			Labels: map[string]string{
+				"creator": "kita-operator",
+			},
 		},
 	}
 

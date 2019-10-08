@@ -1,0 +1,12 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kita-operator-admin-binding
+subjects:
+  - kind: ServiceAccount
+    name: kita-operator
+    namespace: kita
+roleRef:
+  kind: ClusterRole
+  name: cluster-admin
+  apiGroup: ""
