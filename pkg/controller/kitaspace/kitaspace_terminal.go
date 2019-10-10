@@ -3,6 +3,7 @@ package kitaspace
 import (
 	"strconv"
 
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 
 	kitav1alpha1 "github.com/danistrebel/kita-operator/pkg/apis/kita/v1alpha1"
@@ -17,6 +18,7 @@ import (
 )
 
 const workspaceName = "workspace"
+const pvcName = "terminal-volume"
 const terminalPortWebPortName = "web"
 const terminalPortWebPort = 9000
 
@@ -99,7 +101,9 @@ func newKitaTerminalDeloymentforCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.S
 						{
 							Name: "project-files",
 							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
+								PersistentVolumeClaim: &corev1.PersistentVolumeClaimVolumeSource{
+									ClaimName: pvcName,
+								},
 							},
 						},
 					},
@@ -122,10 +126,8 @@ func getRepoInitContainers(repos []string) []corev1.Container {
 	for i, repo := range repos {
 		initContainer := corev1.Container{
 			Name:  "git-init-" + strconv.Itoa(i),
-			Image: "alpine/git",
-			Command: []string{
-				"git",
-				"clone",
+			Image: "danistrebel/kita-git-init",
+			Args: []string{
 				repo,
 			},
 			VolumeMounts: []corev1.VolumeMount{
@@ -166,6 +168,31 @@ func newKitaTerminalServiceForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Sch
 	}
 
 	return service, nil
+}
+
+func newKitaTerminalVolumeClaimForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*corev1.PersistentVolumeClaim, error) {
+	pvc := &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcName,
+			Namespace: cr.Name,
+			Labels:    defaultLabels(cr),
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse("10Gi"),
+				},
+			},
+		},
+	}
+
+	// Set KitaSpace instance as the owner and controller
+	if err := controllerutil.SetControllerReference(cr, pvc, scheme); err != nil {
+		return pvc, err
+	}
+
+	return pvc, nil
 }
 
 func newKitaTerminalRouteForCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.Scheme) (*routev1.Route, error) {

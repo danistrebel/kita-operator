@@ -1,7 +1,10 @@
 module github.com/danistrebel/kita-operator
 
 require (
+	github.com/containerd/continuity v0.0.0-20190827140505-75bee3e2ccb6 // indirect
+	github.com/docker/go-units v0.4.0 // indirect
 	github.com/go-openapi/spec v0.19.0
+	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/openshift/api v3.9.0+incompatible
 	github.com/operator-framework/operator-sdk v0.9.1-0.20190726234243-32a6a5a31bc9
 	github.com/sendgrid/rest v2.4.1+incompatible // indirect

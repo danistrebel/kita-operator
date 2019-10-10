@@ -190,6 +190,28 @@ func (r *ReconcileKitaSpace) Reconcile(request reconcile.Request) (reconcile.Res
 	}
 
 	///////////////////////
+	// KITA PVC
+	///////////////////////
+	pvc, err := newKitaTerminalVolumeClaimForCR(instance, r.scheme)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+	foundVolumeClaim := &corev1.PersistentVolumeClaim{}
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pvc.Name, Namespace: instance.Name}, foundVolumeClaim)
+	if err != nil && errors.IsNotFound(err) {
+		reqLogger.Info("Creating a new PVC", "pvc.Namespace", pvc.Namespace, "pvc.Name", pvc.Name)
+		err = r.client.Create(context.TODO(), pvc)
+		if err != nil {
+			return reconcile.Result{}, err
+		}
+
+		// PVC created successfully - Requeue
+		return reconcile.Result{Requeue: true}, nil
+	} else if err != nil {
+		return reconcile.Result{}, err
+	}
+
+	///////////////////////
 	// KITA SPACE TERMINAL DEPLOYMENT
 	///////////////////////
 	// Define a new Deployment object
