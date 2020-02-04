@@ -20,7 +20,7 @@ import (
 const workspaceName = "workspace"
 const pvcName = "terminal-volume"
 const terminalPortWebPortName = "web"
-const terminalPortWebPort = 9000
+const terminalPortWebPort = 8080
 
 func defaultLabels(cr *kitav1alpha1.KitaSpace) map[string]string {
 	return map[string]string{
@@ -34,10 +34,10 @@ func newKitaTerminalDeloymentforCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.S
 
 	initContainers := getRepoInitContainers(cr.Spec.Repos)
 
-	vsCodeImage := "chinodesuuu/coder:vanilla"
-	if cr.Spec.Platform == "openshift" {
-		vsCodeImage = "chinodesuuu/coder:openshift"
-	}
+	vsCodeImage := "codercom/code-server:v2"
+	// if cr.Spec.Platform == "openshift" {
+	// 	vsCodeImage = "chinodesuuu/coder:openshift"
+	// }
 	print(vsCodeImage)
 
 	deployment := &appsv1.Deployment{
@@ -74,11 +74,7 @@ func newKitaTerminalDeloymentforCR(cr *kitav1alpha1.KitaSpace, scheme *runtime.S
 							},
 							Env: []corev1.EnvVar{
 								{
-									Name:  "CODER_ENABLE_AUTH",
-									Value: "true",
-								},
-								{
-									Name: "CODER_PASSWORD",
+									Name: "PASSWORD",
 									ValueFrom: &corev1.EnvVarSource{
 										SecretKeyRef: &corev1.SecretKeySelector{
 											LocalObjectReference: v1.LocalObjectReference{
